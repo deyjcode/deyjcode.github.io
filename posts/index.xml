@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Posts on Automating Ops</title>
+    
+    
+    
+    <link>https://deyjcode.github.io/posts/</link>
+    <description>Recent content in Posts on Automating Ops</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Fri, 29 May 2020 23:53:42 -0400</lastBuildDate>
+    
+	<atom:link href="https://deyjcode.github.io/posts/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>Moving to Hugo</title>
+      <link>https://deyjcode.github.io/posts/moving-to-hugo/</link>
+      <pubDate>Fri, 29 May 2020 23:53:42 -0400</pubDate>
+      
+      <guid>https://deyjcode.github.io/posts/moving-to-hugo/</guid>
+      <description>
+        
+          
+          
+          
+        
+        
+        
+          In an effort to reinvigorate my writing, I&amp;rsquo;ve switched to Hugo! 🎉 Compared to what I was using before, I actually much prefer the way Hugo handles things. And I feel it captures a more modern approach with a blog.
+My plan is to get back to writing and get back on the wagon.
+Hopefully this will help me get to writing more often!
+          
+        
+        </description>
+    </item>
+    
+    <item>
+      <title>Building an Azure Webserver: Part 1</title>
+      <link>https://deyjcode.github.io/posts/building-an-azure-webserver-part-1/</link>
+      <pubDate>Sat, 23 Feb 2019 13:30:50 -0500</pubDate>
+      
+      <guid>https://deyjcode.github.io/posts/building-an-azure-webserver-part-1/</guid>
+      <description>
+        
+          
+          
+          
+        
+        
+        
+          This guide focuses on primarily utilizing the GUI and Portal.
+Table of Contents  Table of Contents Introduction Designing  Prerequisites  Installing Windows Subsystem for Linux (Windows 10) Installing Ansible (WSL / Ubuntu Distribution) Installing Packer and Terraform   Let&amp;rsquo;s Begin! The Traditional GUI Method  The Azure Portal  Understanding Resources and Resource Groups Application Gateway - HTTP Load Balancer Creating A Network Security Group Our first virtual machine (IIS #1) A taste of automation - deploying the second vm with Azure Resource Manager Templates   Gaining access to our machines  Working with Network Security Groups Creating the Load Balancer Assigning NAT Rules, Health Probes and Connecting via RDP Setting up SFTP   Setting up Our Second Machine Running Commands Through the Portal Testing Load Balancing  Verify access our website (HTTP) Verify access to the SFTP Setting up Shared Storage (Azure Files)  Mapping the Shared Storage   Configuring IIS for Azure Files  Adjusting the Application Pool Troubleshooting Issues with IIS Shared Configuration   Updating SSH to point to Azure Files Locking Down Network Traffic     Wrapping Up (GUI)    Introduction Moving to the &amp;ldquo;Cloud&amp;rdquo; represents quite a few challenges for IT teams that have mostly kept things on-premises.
+          
+        
+        </description>
+    </item>
+    
+    <item>
+      <title>IMAGE_STATE_UNDEPLOYABLE with Packer and Azure</title>
+      <link>https://deyjcode.github.io/posts/image-state-undeployable-with-packer-and-azure/</link>
+      <pubDate>Thu, 13 Dec 2018 13:30:50 -0500</pubDate>
+      
+      <guid>https://deyjcode.github.io/posts/image-state-undeployable-with-packer-and-azure/</guid>
+      <description>
+        
+          
+          
+          
+        
+        
+        
+          Ever run into IMAGE_STATE_UNDEPLOYABLE when running Packer against Azure?
+&amp;hellip;And it keeps going and going?
+The issue here is actually with sysprep and not packer. Surprise, surprise. This error occurs because Sysprep fails to actually set the imagestate. And is an issue with the Azure Agent. See this post for information on the Azure Agent.
+So our solution is in the provisioners block and add the following to the provisioners array with the powershell code:
+          
+        
+        </description>
+    </item>
+    
+  </channel>
+</rss>

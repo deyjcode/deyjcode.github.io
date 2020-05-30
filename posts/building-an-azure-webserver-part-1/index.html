@@ -1,0 +1,933 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    
+      <title>Building an Azure Webserver: Part 1 :: Automating Ops — Write-Post -Passthru | Publish-Blog</title>
+    
+    <meta http-equiv="content-type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+<meta name="description" content="This guide focuses on primarily utilizing the GUI and Portal.
+Table of Contents  Table of Contents Introduction Designing  Prerequisites  Installing Windows Subsystem for Linux (Windows 10) Installing Ansible (WSL / Ubuntu Distribution) Installing Packer and Terraform   Let&amp;rsquo;s Begin! The Traditional GUI Method  The Azure Portal  Understanding Resources and Resource Groups Application Gateway - HTTP Load Balancer Creating A Network Security Group Our first virtual machine (IIS #1) A taste of automation - deploying the second vm with Azure Resource Manager Templates   Gaining access to our machines  Working with Network Security Groups Creating the Load Balancer Assigning NAT Rules, Health Probes and Connecting via RDP Setting up SFTP   Setting up Our Second Machine Running Commands Through the Portal Testing Load Balancing  Verify access our website (HTTP) Verify access to the SFTP Setting up Shared Storage (Azure Files)  Mapping the Shared Storage   Configuring IIS for Azure Files  Adjusting the Application Pool Troubleshooting Issues with IIS Shared Configuration   Updating SSH to point to Azure Files Locking Down Network Traffic     Wrapping Up (GUI)    Introduction Moving to the &amp;ldquo;Cloud&amp;rdquo; represents quite a few challenges for IT teams that have mostly kept things on-premises."/>
+<meta name="keywords" content=""/>
+<meta name="robots" content="noodp"/>
+<link rel="canonical" href="https://deyjcode.github.io/posts/building-an-azure-webserver-part-1/" />
+
+
+
+
+
+<link rel="stylesheet" href="https://deyjcode.github.io/assets/style.css">
+
+
+<link rel="stylesheet" href="https://deyjcode.github.io/style.css">
+
+
+<link rel="apple-touch-icon-precomposed" sizes="144x144" href="https://deyjcode.github.io/img/apple-touch-icon-144-precomposed.png">
+<link rel="shortcut icon" href="https://deyjcode.github.io/img/favicon.png">
+
+
+<meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="Building an Azure Webserver: Part 1"/>
+<meta name="twitter:description" content="This guide focuses on primarily utilizing the GUI and Portal.
+Table of Contents  Table of Contents Introduction Designing  Prerequisites  Installing Windows Subsystem for Linux (Windows 10) Installing Ansible (WSL / Ubuntu Distribution) Installing Packer and Terraform   Let&rsquo;s Begin! The Traditional GUI Method  The Azure Portal  Understanding Resources and Resource Groups Application Gateway - HTTP Load Balancer Creating A Network Security Group Our first virtual machine (IIS #1) A taste of automation - deploying the second vm with Azure Resource Manager Templates   Gaining access to our machines  Working with Network Security Groups Creating the Load Balancer Assigning NAT Rules, Health Probes and Connecting via RDP Setting up SFTP   Setting up Our Second Machine Running Commands Through the Portal Testing Load Balancing  Verify access our website (HTTP) Verify access to the SFTP Setting up Shared Storage (Azure Files)  Mapping the Shared Storage   Configuring IIS for Azure Files  Adjusting the Application Pool Troubleshooting Issues with IIS Shared Configuration   Updating SSH to point to Azure Files Locking Down Network Traffic     Wrapping Up (GUI)    Introduction Moving to the &ldquo;Cloud&rdquo; represents quite a few challenges for IT teams that have mostly kept things on-premises."/>
+
+
+
+<meta property="og:title" content="Building an Azure Webserver: Part 1" />
+<meta property="og:description" content="This guide focuses on primarily utilizing the GUI and Portal.
+Table of Contents  Table of Contents Introduction Designing  Prerequisites  Installing Windows Subsystem for Linux (Windows 10) Installing Ansible (WSL / Ubuntu Distribution) Installing Packer and Terraform   Let&rsquo;s Begin! The Traditional GUI Method  The Azure Portal  Understanding Resources and Resource Groups Application Gateway - HTTP Load Balancer Creating A Network Security Group Our first virtual machine (IIS #1) A taste of automation - deploying the second vm with Azure Resource Manager Templates   Gaining access to our machines  Working with Network Security Groups Creating the Load Balancer Assigning NAT Rules, Health Probes and Connecting via RDP Setting up SFTP   Setting up Our Second Machine Running Commands Through the Portal Testing Load Balancing  Verify access our website (HTTP) Verify access to the SFTP Setting up Shared Storage (Azure Files)  Mapping the Shared Storage   Configuring IIS for Azure Files  Adjusting the Application Pool Troubleshooting Issues with IIS Shared Configuration   Updating SSH to point to Azure Files Locking Down Network Traffic     Wrapping Up (GUI)    Introduction Moving to the &ldquo;Cloud&rdquo; represents quite a few challenges for IT teams that have mostly kept things on-premises." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://deyjcode.github.io/posts/building-an-azure-webserver-part-1/" />
+<meta property="article:published_time" content="2019-02-23T13:30:50-05:00" />
+<meta property="article:modified_time" content="2019-02-23T13:30:50-05:00" /><meta property="og:site_name" content="Automating Ops" />
+
+
+
+
+
+
+  </head>
+  <body class="dark-theme">
+    <div class="container">
+      <header class="header">
+  <span class="header__inner">
+    <a href="/" class="logo" style="text-decoration: none;">
+  
+    <span class="logo__mark"><svg xmlns="http://www.w3.org/2000/svg" class="greater-icon" viewBox="0 0 44 44">
+  <path fill="none" d="M15 8l14.729 14.382L15 35.367"/>
+</svg>
+</span>
+    <span class="logo__text"># automating ops</span>
+    <span class="logo__cursor"></span>
+  
+</a>
+
+    <span class="header__right">
+      
+        <nav class="menu">
+  <ul class="menu__inner menu__inner--desktop">
+    
+      
+        
+          <li><a href="/about">About</a></li>
+        
+      
+      
+    
+  </ul>
+
+  <ul class="menu__inner menu__inner--mobile">
+    
+      
+        <li><a href="/about">About</a></li>
+      
+    
+  </ul>
+</nav>
+
+        <span class="menu-trigger">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path d="M0 0h24v24H0z" fill="none"/>
+            <path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/>
+          </svg>
+        </span>
+      
+      <span class="theme-toggle">
+        <svg class="theme-toggler" width="24" height="24" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <path d="M22 41C32.4934 41 41 32.4934 41 22C41 11.5066 32.4934 3 22
+  3C11.5066 3 3 11.5066 3 22C3 32.4934 11.5066 41 22 41ZM7 22C7
+  13.7157 13.7157 7 22 7V37C13.7157 37 7 30.2843 7 22Z"/>
+</svg>
+
+      </span>
+    </span>
+  </span>
+</header>
+
+
+      <div class="content">
+        
+  
+  
+
+  <div class="post">
+    <h1 class="post-title"><a href="https://deyjcode.github.io/posts/building-an-azure-webserver-part-1/">Building an Azure Webserver: Part 1</a></h1>
+    <div class="post-meta">
+      
+        <span class="post-date">
+          2019-02-23
+        </span>
+
+        
+          
+        
+      
+
+      
+      
+        <span class="post-read-time">— 18 min read</span>
+      
+    </div>
+
+    
+
+    
+
+    <div class="post-content">
+      
+      <p>This guide focuses on primarily utilizing the GUI and Portal.</p>
+<h1 id="table-of-contents">Table of Contents</h1>
+<ul>
+<li><a href="#table-of-contents">Table of Contents</a></li>
+<li><a href="#introduction">Introduction</a></li>
+<li><a href="#designing">Designing</a>
+<ul>
+<li><a href="#prerequisites">Prerequisites</a>
+<ul>
+<li><a href="#installing-windows-subsystem-for-linux-windows-10">Installing Windows Subsystem for Linux (Windows 10)</a></li>
+<li><a href="#installing-ansible-wsl--ubuntu-distribution">Installing Ansible (WSL / Ubuntu Distribution)</a></li>
+<li><a href="#installing-packer-and-terraform">Installing Packer and Terraform</a></li>
+</ul>
+</li>
+<li><a href="#lets-begin-the-traditional-gui-method">Let&rsquo;s Begin! The Traditional GUI Method</a>
+<ul>
+<li><a href="#the-azure-portal">The Azure Portal</a>
+<ul>
+<li><a href="#understanding-resources-and-resource-groups">Understanding Resources and Resource Groups</a></li>
+<li><a href="#application-gateway---http-load-balancer">Application Gateway - HTTP Load Balancer</a></li>
+<li><a href="#creating-a-network-security-group">Creating A Network Security Group</a></li>
+<li><a href="#our-first-virtual-machine-iis-1">Our first virtual machine (IIS #1)</a></li>
+<li><a href="#a-taste-of-automation---deploying-the-second-vm-with-azure-resource-manager-templates">A taste of automation - deploying the second vm with Azure Resource Manager Templates</a></li>
+</ul>
+</li>
+<li><a href="#gaining-access-to-our-machines">Gaining access to our machines</a>
+<ul>
+<li><a href="#working-with-network-security-groups">Working with Network Security Groups</a></li>
+<li><a href="#creating-the-load-balancer">Creating the Load Balancer</a></li>
+<li><a href="#assigning-nat-rules-health-probes-and-connecting-via-rdp">Assigning NAT Rules, Health Probes and Connecting via RDP</a></li>
+<li><a href="#setting-up-sftp">Setting up SFTP</a></li>
+</ul>
+</li>
+<li><a href="#setting-up-our-second-machine">Setting up Our Second Machine</a></li>
+<li><a href="#running-commands-through-the-portal">Running Commands Through the Portal</a></li>
+<li><a href="#testing-load-balancing">Testing Load Balancing</a>
+<ul>
+<li><a href="#verify-access-our-website-http">Verify access our website (HTTP)</a></li>
+<li><a href="#verify-access-to-the-sftp">Verify access to the SFTP</a></li>
+<li><a href="#setting-up-shared-storage-azure-files">Setting up Shared Storage (Azure Files)</a>
+<ul>
+<li><a href="#mapping-the-shared-storage">Mapping the Shared Storage</a></li>
+</ul>
+</li>
+<li><a href="#configuring-iis-for-azure-files">Configuring IIS for Azure Files</a>
+<ul>
+<li><a href="#adjusting-the-application-pool">Adjusting the Application Pool</a></li>
+<li><a href="#troubleshooting-issues-with-iis-shared-configuration">Troubleshooting Issues with IIS Shared Configuration</a></li>
+</ul>
+</li>
+<li><a href="#updating-ssh-to-point-to-azure-files">Updating SSH to point to Azure Files</a></li>
+<li><a href="#locking-down-network-traffic">Locking Down Network Traffic</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a href="#wrapping-up-gui">Wrapping Up (GUI)</a></li>
+</ul>
+</li>
+</ul>
+<h1 id="introduction">Introduction</h1>
+<p>Moving to the &ldquo;Cloud&rdquo; represents quite a few challenges for IT teams that have mostly kept things on-premises. There&rsquo;s a lot of pressure to learn a bunch of new technologies. New methods or processes are introduced and new ways to manage infrastructure keep operations on its toes. Infrastructure as Code, Configuration as Code, Continuous Integration and Continuous Deployment are all being incorporated into business processes.</p>
+<p>This guide is an attempt to become a bit more practical.</p>
+<p>The guide will attempt to increase in scope of difficulty and complexity as we move through, however. As such, I will try to keep the buzzwords to a minimum and focus on actionable content.</p>
+<p>It is recommended to follow this guide from a Windows Workstation, and we will be focusing on IIS.
+However, all the tools outlined here work fine with a -nix-like environment. Refer to the individual tools and their requirements for more information.</p>
+<h1 id="designing">Designing</h1>
+<ul>
+<li>We&rsquo;ve been tasked to build a IIS system in &ldquo;the cloud&rdquo;.</li>
+<li>We want a IIS system that utilizes Azure resources in its entirety, and we want to utilize services to distribute load amongst our systems.</li>
+<li>We want to be able to communicate with the servers over sftp so we can upload data securely.</li>
+<li>Furthermore, we do not want our IIS systems accessible from the Internet other than through a load balancer.</li>
+</ul>
+<p>We want to learn how to do this task in a variety of ways to explore the capability of Azure to accomodate varying levels of skill. As such, we will accomplish this task in three different ways:</p>
+<ul>
+<li>
+<p>GUI Method: focuses on creating this solution with the Azure Portal and Dashboard, communicating with the server using RDP. Configuring the system with the mouse, and some light PowerShell scripting to get started.</p>
+</li>
+<li>
+<p>Command-line Method: focuses on building resources using Azure CLI or the &lsquo;Az&rsquo; module for PowerShell.</p>
+</li>
+<li>
+<p>Infrastructure as Code: focuses on building resources with Packer and Terraform. Our first introduction to creating resources with a code base!</p>
+</li>
+<li>
+<p>Configuration as Code: focuses on configuring those resources with Ansible.</p>
+</li>
+</ul>
+<p>To reduce the size of the guide, we&rsquo;ll opt not to use Active Directory or go over that in any way.</p>
+<h2 id="prerequisites">Prerequisites</h2>
+<p><strong>Note</strong>: You do not need to install anything for this portion of the guide.</p>
+<p>If you choose to follow along, you&rsquo;ll need:</p>
+<ul>
+<li>
+<p>Access to Azure. Preferably in your own subscription.</p>
+<ul>
+<li>As a reminder, <a href="https://azure.microsoft.com/en-us/free/">Azure provides a &lsquo;free-trial&rsquo; for new accounts</a>.</li>
+</ul>
+</li>
+<li>
+<p>Windows 10.</p>
+</li>
+<li>
+<p>The ability to install the following tools (later in the series):</p>
+<ul>
+<li>Windows Subsystem for Linux</li>
+<li>Azure CLI or &lsquo;Az&rsquo; module for PowerShell</li>
+<li>Terraform (for Part 2, Infrastructure as Code)</li>
+<li>Packer (for part 2, Infrastructure as Code)</li>
+</ul>
+</li>
+<li>
+<p>Familiarity with PowerShell.</p>
+</li>
+</ul>
+<h3 id="installing-windows-subsystem-for-linux-windows-10">Installing Windows Subsystem for Linux (Windows 10)</h3>
+<p>Follow the guide located here: <a href="https://docs.microsoft.com/en-us/windows/wsl/install-win10">Install WSL on Windows 10</a></p>
+<h3 id="installing-ansible-wsl--ubuntu-distribution">Installing Ansible (WSL / Ubuntu Distribution)</h3>
+<ol>
+<li>Open the WSL Bash window.</li>
+<li>Run <code>apt-get update</code> and then <code>apt-get upgrade</code>.</li>
+<li>Run the following commands:</li>
+</ol>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">sudo apt-get update
+sudo apt-get install software-properties-common
+sudo apt-add-repository --yes --update ppa:ansible/ansible
+sudo apt-get install ansible
+pip install <span style="color:#e6db74">&#34;pywinrm&gt;=0.3.0&#34;</span>
+</code></pre></div><h3 id="installing-packer-and-terraform">Installing Packer and Terraform</h3>
+<ol>
+<li>Open a PowerShell console.</li>
+<li>We will install Chocolatey:</li>
+</ol>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-powershell" data-lang="powershell">Set-ExecutionPolicy Bypass -Scope <span style="color:#66d9ef">Process</span> -Force; iex ((New-Object System.Net.WebClient).DownloadString(<span style="color:#e6db74">&#39;https://chocolatey.org/install.ps1&#39;</span>))`
+</code></pre></div><ol start="3">
+<li>Run the following commands:</li>
+</ol>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-powershell" data-lang="powershell">choco install packer
+choco install terraform
+</code></pre></div><p>This will place <code>packer</code> and <code>terraform</code> in our <code>$path</code>.</p>
+<p>Alternatively, you can also do this manually by navigating to the project pages.</p>
+<h2 id="lets-begin-the-traditional-gui-method">Let&rsquo;s Begin! The Traditional GUI Method</h2>
+<h3 id="the-azure-portal">The Azure Portal</h3>
+<p>After you have your Azure account, navigate to <a href="https://portal.azure.com">the Azure Portal</a>. The Azure Portal is a great way to get familiar with resources and is going to be your gateway for all services on Azure.</p>
+<h4 id="understanding-resources-and-resource-groups">Understanding Resources and Resource Groups</h4>
+<p>It is important to understand that everything in Azure, utilizes the Azure Resource Manager (the default method of deployment). Those resources are grouped inside Resource Groups. It is a logical grouping mechanism and helps segment resources from other resources.</p>
+<p>See this link for details: <a href="https://docs.microsoft.com/en-us/azure/azure-resource-manager/resource-group-overview">Azure Resource Manager Overview</a></p>
+<h4 id="application-gateway---http-load-balancer">Application Gateway - HTTP Load Balancer</h4>
+<p>Before we can create a virtual machine, we need to deploy a load balancing solution. This is important because our virtual machine will ask us if we are placing it behind one during virtual machine creation.</p>
+<p>I will create a Application Gateway for the purposes of the guide since we want our web application behind a Layer 7 Load Balancer. We want control over the traffic and this allows us to do so.</p>
+<p>The Application Gateway Resource, will auto-create several resources required for the Application Gateway. These resources include the <code>virtual network</code>, or the <code>subnets</code> inside that network necessary for the load balancer to function. Since we are using the Application Gateway as our primary resource to gain access to our website, we will start with this process.</p>
+<ol>
+<li>Log into <a href="https://portal.azure.com">https://portal.azure.com</a> and click &ldquo;Create a Resource&rdquo; on the left side of the screen.</li>
+<li>Type &ldquo;Application Gateway&rdquo; and click &ldquo;Create&rdquo;.</li>
+<li>A wizard appears! Let&rsquo;s start filling out the basic info for our Application Gateway</li>
+</ol>
+<ul>
+<li>Name: <code>tutorialgui-appgw</code></li>
+<li>Tier: <code>Standard</code></li>
+<li>Instance Count: <code>2</code></li>
+<li>Sku Size: <code>Small</code></li>
+<li>Subscription: Select your subscription</li>
+<li>Resource Group: Create New
+<ul>
+<li>Name: <code>tutorial-gui</code></li>
+</ul>
+</li>
+<li>Location: <code>East US 2</code></li>
+</ul>
+<ol start="4">
+<li>The next screen involves creating a new network for our Application Gateway, with its own subnet, and public IP address:</li>
+</ol>
+<ul>
+<li>Subnet Configuration
+<ul>
+<li>Click Choose a Virtual Network, Create New</li>
+<li>Name: <code>appgw-vnet</code></li>
+<li>Address Space: <code>10.2.0.0/16</code></li>
+<li>Subnet: <code>appgw-subnet</code></li>
+<li>Subnet Address Range: <code>10.2.0.0/24</code></li>
+</ul>
+</li>
+<li>Frontend IP Configuration
+<ul>
+<li>IP Address Type: Public</li>
+<li>Create New: <code>tutorialgui-appgw-ip</code></li>
+<li>DNS Label: <code>tutorialguiapp.eastus2.cloudapp.azure.com</code> (this will be where we access our web app)</li>
+</ul>
+</li>
+<li>Listener Configuration
+<ul>
+<li>Protocol: <code>http</code></li>
+<li>Port: <code>80</code></li>
+<li>Additional Settings: <code>HTTP2</code></li>
+</ul>
+</li>
+</ul>
+<ol start="5">
+<li>What the summary screen looks like:</li>
+</ol>
+<p><img src="/app-gw.png" alt="The Azure Dashboard" title="The Azure Dashboard"></p>
+<p>Watch the notifications icon for when it finishes (it may take a while&hellip;so grab a coffee).</p>
+<p>Once deployed &hellip; let&rsquo;s move on to handling Network Security.</p>
+<h4 id="creating-a-network-security-group">Creating A Network Security Group</h4>
+<p>We need to create a Network Security Group to secure our virtual machines and allow us the ability to connect to them.</p>
+<ol>
+<li>Click &ldquo;Create a Resource&rdquo; on the left side of the screen.</li>
+<li>Type &ldquo;Network Security Group&rdquo; and click &ldquo;Create&rdquo;.</li>
+<li>Name: <code>iis-nsg</code></li>
+<li>Location: <code>East US 2</code></li>
+<li>Select the resource group, <code>tutorial-gui</code> that we created in the previous step.</li>
+</ol>
+<p>In a few moments, we will configure the Network Security Group further.</p>
+<h4 id="our-first-virtual-machine-iis-1">Our first virtual machine (IIS #1)</h4>
+<ol>
+<li>Click &ldquo;Create a Resource&rdquo; on the left side of the screen.</li>
+<li>Type &ldquo;Windows 2016 Datacenter&rdquo; and click &ldquo;Create&rdquo;.</li>
+<li>A wizard appears! Let&rsquo;s start filling out the info for our first virtual machine</li>
+</ol>
+<ul>
+<li>Basics
+<ul>
+<li>Subscription: This should be pre-filled with your subscription id.
+<ul>
+<li>Resource Group: <code>tutorial-gui</code></li>
+</ul>
+</li>
+<li>Instance Details aka Virtual Machine Details
+<ul>
+<li>Virtual Machine Name: <code>tutorialvm1</code></li>
+<li>Region: <code>East US 2</code> (or a region closest to your location)</li>
+<li>Availability Options: <code>Availability Set</code> (<a href="https://blogs.technet.microsoft.com/uktechnet/2018/01/08/what-are-azure-availability-zones-and-why-should-you-use-them/">See here for the differences between a Zone and a Set</a>)</li>
+<li>NOTE: We will cover Availability Zone/Set when we reach that portion of the tutorial.</li>
+<li>Availability Set Name: <code>(new) tutorialset</code>
+<ul>
+<li>Fault Domains: <code>2</code></li>
+<li>Update Domains: <code>5</code></li>
+</ul>
+</li>
+<li>Size: <code>Standard_F1s</code></li>
+<li>Assign Local Administrator account details.</li>
+<li>Public Inbound Ports: <code>none</code>
+<ul>
+<li>We are going to allow inbound ports through a Layer 4 load balancer, later in the guide.</li>
+</ul>
+</li>
+<li>If you qualify for Azure Hybrid Benefit, select this <code>Yes</code>; Otherwise, select <code>No</code>.</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>Disks
+<ul>
+<li>Under Disk Options, OS Disk Type: <code>Standard SSD</code></li>
+</ul>
+</li>
+<li>Networking
+<ul>
+<li>Virtual Network:
+<ul>
+<li>Select: <code>appgw-vnet</code></li>
+<li>Click &ldquo;Manage Subnet Configuration&rdquo;
+<ul>
+<li>Click <code>+</code> Subnet</li>
+<li>Name: <code>iis-subnet</code></li>
+<li>Configure Network Security Group: <code>iis-nsg</code></li>
+<li>Select OK and leave all other options
+<ul>
+<li>This will immediately create the subnet.</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>Navigate back to the <code>Create Machine</code> wizard</li>
+<li>Public IP: <code>none</code></li>
+<li>NIC Network Security Group: <code>Advanced</code>
+<ul>
+<li>Select the <code>iis-nsg</code> under <code>Configure Network Security Group</code> dropdown.</li>
+</ul>
+</li>
+<li>Accelerated Networking should be <code>off</code>.</li>
+<li>Load Balancing, select <code>Yes</code> to place the machine behind a load balancer
+<ul>
+<li>Load Balancing Options: <code>Application Gateway</code></li>
+<li>Application Gateway: <code>tutorialgui-appgw</code></li>
+<li>Backend Pool: <code>appGatewayBackendPool</code></li>
+</ul>
+</li>
+</ul>
+</li>
+<li>Management
+<ul>
+<li>Boot Diagnostics: <code>On</code></li>
+<li>OS Guest Diagnostics: <code>On</code></li>
+<li>Diagnostic Storage Account: <code>(new) tutorialguidiag</code></li>
+<li>All other settings off.</li>
+</ul>
+</li>
+<li>Skip Guest Config/Tags</li>
+<li>Finish the wizard, ensure validation has passed and the deployment will kick off.</li>
+</ul>
+<h4 id="a-taste-of-automation---deploying-the-second-vm-with-azure-resource-manager-templates">A taste of automation - deploying the second vm with Azure Resource Manager Templates</h4>
+<p>Let&rsquo;s now deploy a second virtual machine, but this time we will use a Resource Manager template. All resources created using the Portal use Azure Resource Manager templates.</p>
+<ol>
+<li>Navigate to the Resource Group.</li>
+<li>In the main pane window, select Deployments. It should say something like &ldquo;4 succeeded&rdquo;.</li>
+<li>Select the deployment for <code>CreateVM...</code></li>
+<li>This will provide a summary of your successful previous deployment.</li>
+<li>Click the Redeploy button.</li>
+<li>Reselect your resource group, <code>tutorial-gui</code></li>
+<li>Change the values of your vm, such as adding an incrememental number, i.e., <code>tutorialvm1</code>. Generally the only fields you&rsquo;ll need to change are the <code>name</code>, <code>password</code>, and <code>network interface name</code>.</li>
+</ol>
+<p>To learn more about Azure Resource Templates, head here: <a href="https://docs.microsoft.com/en-us/azure/templates/">https://docs.microsoft.com/en-us/azure/templates/</a></p>
+<p>A new deployment will occur and will be added to the same availability set cluster automagically! :)
+If everything went well, we will have deloyed the following resources:</p>
+<p><img src="/vm-finished.png" alt="VM Finished" title="VM Finished!"></p>
+<h3 id="gaining-access-to-our-machines">Gaining access to our machines</h3>
+<p>So the goal, as you might remember, is to have these machines isolated from the Internet. As such there are no public IPs used for the virtual machines themselves. So how do we gain access? Well, we could create a virtual machine and use it as a &ldquo;JumpBox&rdquo;. However, in this tutorial we will leverage the Layer 4 Load Balancer for this instead and use NAT.</p>
+<h4 id="working-with-network-security-groups">Working with Network Security Groups</h4>
+<p>But before we do any of that. let&rsquo;s take a step back&hellip;</p>
+<p>All traffic that enters the Azure Virtual Network is screened. That traffic is screened by the <a href="https://docs.microsoft.com/en-us/azure/virtual-network/security-overview">Network Security Group</a>. This is traffic filtered BEFORE it touches any VMs (it is important to also utilize the Operating System Firewall).</p>
+<p>Let&rsquo;s enable HTTP and RDP access to our network:</p>
+<ol>
+<li>Open the <code>iis-nsg</code> Network Security Group.</li>
+<li>Under <code>Inbound Security Rules</code> add the following rules:</li>
+</ol>
+<ul>
+<li>
+<p>Name: <code>RDP-Allow</code></p>
+<ul>
+<li><code>ANY</code> Source, <code>ANY</code> Destination.</li>
+<li>Destination Port Range: <code>3389</code></li>
+</ul>
+</li>
+<li>
+<p>Name: <code>HTTP-Allow</code></p>
+<ul>
+<li>ANY Source, ANY Destination.</li>
+<li>Destination Port Range: <code>80</code></li>
+</ul>
+</li>
+<li>
+<p>Name: <code>SFTP-Allow</code></p>
+<ul>
+<li>ANY Source, ANY Destination.</li>
+<li>Destination Port Range: <code>22</code></li>
+</ul>
+</li>
+</ul>
+<p>Enter Azure Load Balancer. This is a Layer 4 Load Balancer and is capable of handling Layer 4 traffic such as RDP and SFTP traffic. This is what we will use to gain access to our machines.</p>
+<p>NOTE: Contrast that with the Azure Application Gateway we created originally, which only handles Layer 7 Traffic (such as HTTP).</p>
+<h4 id="creating-the-load-balancer">Creating the Load Balancer</h4>
+<ol>
+<li>Launch the new resource wizard.</li>
+<li>Type &ldquo;Load Balancer&rdquo; and choose the Microsoft branded resource.</li>
+</ol>
+<ul>
+<li>Resource Group: <code>tutorial-gui</code></li>
+<li>Name: <code>tutorial-lb</code></li>
+<li>Type: <code>public</code></li>
+<li>SKU: <code>Basic</code></li>
+</ul>
+<ol start="6">
+<li>Public IP: Create New</li>
+</ol>
+<ul>
+<li>Name: <code>tutorial-lb-public</code></li>
+<li>Assignment: <code>Static</code></li>
+</ul>
+<ol start="7">
+<li>Place the load balancer in the same resource group, <code>tutorial-gui</code>. Create the resource.</li>
+<li>After the deployment is finished, navigate to the load balancer resource in our resource group. And select <code>Backend Pools</code>.</li>
+<li>Add a new backend pool:</li>
+</ol>
+<ul>
+<li>Name: <code>iisvm-backendpool</code></li>
+<li>Associated to: <code>availability set</code></li>
+<li>Select <code>tutorialset</code></li>
+</ul>
+<p>Configuration for the backend pool looks like the below image:</p>
+<p><img src="/lb-backend-pool.png" alt="The load balancer backend pool" title="The load balancer backend pool"></p>
+<p>The backend pool is a collection of virtual machines to load balance.</p>
+<h4 id="assigning-nat-rules-health-probes-and-connecting-via-rdp">Assigning NAT Rules, Health Probes and Connecting via RDP</h4>
+<p>Once the backend pool is finished, we will add a NAT rule. This will allow us to communicate with the machines even though they do not have public IPs.</p>
+<p>Under the load balancer pane:</p>
+<ol>
+<li>Under Inbound NAT rules, add a new load balancing NAT rule:</li>
+</ol>
+<ul>
+<li>Name: <code>iisvm-rdp-nat</code></li>
+<li>Service: <code>RDP</code></li>
+<li>Target VM: <code>tutorialvm1</code></li>
+<li>Network IP Configuration: <code>ipconfig1</code></li>
+</ul>
+<p><img src="/lb-vm-target.png" alt="NAT rule for vm1" title="NAT rule for vm1"></p>
+<ol start="2">
+<li>We need an additional probe for sftp. Under Health Probes, create a new probe:</li>
+</ol>
+<ul>
+<li>Name: <code>sftp-probe</code></li>
+<li>Protocol and Port: <code>TCP 22</code></li>
+</ul>
+<ol start="3">
+<li>Under Load Balancing Rules, create a new load balancing rule:</li>
+</ol>
+<ul>
+<li>Name: <code>sftp-lb-rule</code></li>
+<li>IP Version: <code>4</code></li>
+<li>Protocol and Port (and Backend Port): <code>TCP 22</code></li>
+<li>Session Persistence: <code>none</code></li>
+</ul>
+<p>Let&rsquo;s connect via RDP!</p>
+<ol>
+<li>Locate your Public IP address of the load balancer by doing the following:</li>
+</ol>
+<ul>
+<li>One the overview screen of our load balancer, <code>tutorial-lb</code></li>
+<li>Find the Public IP address</li>
+</ul>
+<ol start="2">
+<li>Enter the IP address in the RDP box and log in with the credentials you specified during VM creation.</li>
+<li>Voila!</li>
+</ol>
+<p><img src="/rdp.png" alt="rdp session successful" title="rdp session successful"></p>
+<p>We can also verify that the load balancer mapped us to the right vm by running <code>ipconfig</code> in the virtual machine RDP session.</p>
+<h4 id="setting-up-sftp">Setting up SFTP</h4>
+<p>Now that we&rsquo;ve connected to our virtual machine, let&rsquo;s install IIS and set up sftp.</p>
+<p>We are running the below script as the <code>tutorialadmin</code> user, originally created during the Portal setup. Run the following PowerShell script as Administrator inside our newly created VM.</p>
+<p>The below script will configure Bitvise, a SSH client for Windows. In addition, we will install IIS. For advanced users, here&rsquo;s the <a href="https://dl.bitvise.com/BssCfg815.html#IBssCfg815">Bitvise SSH reference</a>.</p>
+<p>Be sure to edit the line: <code>$cfg.settings.access.virtAccounts.new.virtPassword.Set(&quot;secret-password-here&quot;)</code> with the proper value.</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-powershell" data-lang="powershell">$url = <span style="color:#e6db74">&#34;https://dl.bitvise.com/BvSshServer-Inst.exe&#34;</span>
+$output = <span style="color:#e6db74">&#34;C:\Apps\BvSshServer-Inst.exe&#34;</span>
+$outputDirectory = <span style="color:#e6db74">&#34;C:\Apps\&#34;</span>
+$settingsFilePath = <span style="color:#e6db74">&#34;C:\Apps\bitvise-settings&#34;</span>
+$start_time = Get-Date
+
+Install-WindowsFeature -Name <span style="color:#e6db74">&#34;Web-WebServer&#34;</span>,<span style="color:#e6db74">&#34;Web-Mgmt-Console&#34;</span> -Verbose
+
+<span style="color:#75715e"># Create BitVise Directory</span>
+Write-Output <span style="color:#e6db74">&#34;Creating $outputDirectory&#34;</span>
+New-Item -ItemType Directory -Path $outputDirectory -Force
+
+<span style="color:#75715e"># Download the file</span>
+Write-Output <span style="color:#e6db74">&#34;Downloading $url to $output&#34;</span>
+(New-Object System.Net.WebClient).DownloadFile($url, $output)
+
+Write-Output <span style="color:#e6db74">&#34;Time taken: </span>$((Get-Date).Subtract($start_time).Seconds)<span style="color:#e6db74"> second(s)&#34;</span>
+
+<span style="color:#75715e"># Run unattended install</span>
+Write-Output <span style="color:#e6db74">&#34;Running Bitvise Unattended Install&#34;</span>
+&amp; C:\Apps\BvSshServer-Inst.exe -acceptEULA -defaultInstance
+
+<span style="color:#75715e"># Create BitVise settings file</span>
+Write-Output <span style="color:#e6db74">&#34;Creating BitVise Settings File&#34;</span>
+New-Item -ItemType File -Path $settingsFilePath -Force
+
+$settingsFile = <span style="color:#e6db74">&#39;$cfg = new-object -com &#34;BssCfg815.BssCfg815&#34;
+</span><span style="color:#e6db74">
+</span><span style="color:#e6db74">$cfg.settings.SetDefaults()
+</span><span style="color:#e6db74">$cfg.settings.server.SetDefaults()
+</span><span style="color:#e6db74">$cfg.settings.server.windowsFirewall.SetDefaults()
+</span><span style="color:#e6db74">$cfg.settings.server.windowsFirewall.sshPortsFirewallSetting = 3 # $cfg.enums.WindowsFirewallSetting.globalScope
+</span><span style="color:#e6db74">$cfg.settings.server.windowsFirewall.forwardedPortsFirewallSetting = 3 # $cfg.enums.WindowsFirewallSetting.globalScope
+</span><span style="color:#e6db74">$cfg.settings.server.windowsFirewall.ftpPortsFirewallSetting = 3 # $cfg.enums.WindowsFirewallSetting.globalScope
+</span><span style="color:#e6db74">$cfg.settings.access.SetDefaults()
+</span><span style="color:#e6db74">$cfg.settings.access.virtAccounts.Clear()
+</span><span style="color:#e6db74">$cfg.settings.access.virtAccounts.new.SetDefaults()
+</span><span style="color:#e6db74">$cfg.settings.access.virtAccounts.new.virtAccount = &#34;tutorialadmin&#34;
+</span><span style="color:#e6db74">$cfg.settings.access.virtAccounts.new.virtPassword.Set(&#34;secret-password-here&#34;)
+</span><span style="color:#e6db74">$cfg.settings.access.virtAccounts.new.group = &#34;Virtual Users&#34;
+</span><span style="color:#e6db74">$cfg.settings.access.virtAccounts.new.loginAllowed = 1 # $cfg.enums.DefaultYesNo.yes
+</span><span style="color:#e6db74">$cfg.settings.access.virtAccounts.new.term.SetDefaults()
+</span><span style="color:#e6db74">$cfg.settings.access.virtAccounts.new.term.shellAccessType = 10 # $cfg.enums.ShellAccessWD.bvshell
+</span><span style="color:#e6db74">$cfg.settings.access.virtAccounts.new.xfer.SetDefaults()
+</span><span style="color:#e6db74">$cfg.settings.access.virtAccounts.new.xfer.permitScp = 1 # $cfg.enums.DefaultYesNo.yes
+</span><span style="color:#e6db74">$cfg.settings.access.virtAccounts.new.xfer.permitSftp = 1 # $cfg.enums.DefaultYesNo.yes
+</span><span style="color:#e6db74">$cfg.settings.access.virtAccounts.new.xfer.permitFtps = 1 # $cfg.enums.DefaultYesNo.yes
+</span><span style="color:#e6db74">$cfg.settings.access.virtAccounts.new.xfer.inheritMountPoints = $false
+</span><span style="color:#e6db74">$cfg.settings.access.virtAccounts.new.xfer.mountPoints.Clear()
+</span><span style="color:#e6db74">$cfg.settings.access.virtAccounts.new.xfer.mountPoints.new.SetDefaults()
+</span><span style="color:#e6db74">$cfg.settings.access.virtAccounts.new.xfer.mountPoints.new.realRootPath = &#34;C:\inetpub\wwwroot&#34;
+</span><span style="color:#e6db74">$cfg.settings.access.virtAccounts.new.xfer.mountPoints.NewCommit()
+</span><span style="color:#e6db74">$cfg.settings.access.virtAccounts.new.xfer.useDefaultSfsHomeDir = $false
+</span><span style="color:#e6db74">$cfg.settings.access.virtAccounts.new.fwding.SetDefaults()
+</span><span style="color:#e6db74">$cfg.settings.access.virtAccounts.new.fwding.permitC2S = 2 # $cfg.enums.DefaultYesNo.no
+</span><span style="color:#e6db74">$cfg.settings.access.virtAccounts.new.fwding.permitS2C = 2 # $cfg.enums.DefaultYesNo.no
+</span><span style="color:#e6db74">$cfg.settings.access.virtAccounts.NewCommit()
+</span><span style="color:#e6db74">
+</span><span style="color:#e6db74">$cfg.settings.Save()&#39;</span>
+
+Set-Content -Path $settingsFilePath -Value $settingsFile -Verbose -NoNewline
+
+<span style="color:#75715e"># Apply the settings file configuration</span>
+Write-Output <span style="color:#e6db74">&#34;Applying configuration with BssCfg&#34;</span>
+&amp; <span style="color:#e6db74">&#39;C:\Program Files\Bitvise SSH Server\BssCfg.exe&#39;</span> settings importText $settingsFilePath
+
+<span style="color:#75715e"># Start the service</span>
+Get-Service BvSshServer | Start-Service -Verbose
+
+Write-Output <span style="color:#e6db74">&#34;
+</span><span style="color:#e6db74">########
+</span><span style="color:#e6db74">Script completed. It is advised to restart the machine.
+</span><span style="color:#e6db74">########
+</span><span style="color:#e6db74">&#34;</span>
+</code></pre></div><p>When the installation succeeds, a message appears:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-plaintext" data-lang="plaintext">########
+Script completed. It is advised to restart the machine.
+########
+</code></pre></div><h3 id="setting-up-our-second-machine">Setting up Our Second Machine</h3>
+<p>While connected via RDP, open a secondary RDP console and log into the other VM.</p>
+<p>Launch a PowerShell console and enter the above script and run it.</p>
+<h3 id="running-commands-through-the-portal">Running Commands Through the Portal</h3>
+<p>Alternatively, you can also use the Azure Portal to run the code without even logging into the VM!</p>
+<ol>
+<li>Navigate to the VM in the Portal.</li>
+<li>On the left side, click Run Command.</li>
+<li>Click PowerShell Script and paste the command above.</li>
+<li>Click Run, and allow the script to execute.</li>
+<li>After a few seconds, the script output will appear:</li>
+</ol>
+<p><img src="/portal-execute-command-posh.png" alt="executing remote command for Powershell" title="executing remote command for Powershell"></p>
+<ol start="6">
+<li>It is advised to restart the machine from the Portal after this has completed.</li>
+</ol>
+<h3 id="testing-load-balancing">Testing Load Balancing</h3>
+<p>Now that we have our infrastructure in place. Let&rsquo;s test!</p>
+<h4 id="verify-access-our-website-http">Verify access our website (HTTP)</h4>
+<p>Recall that our website is managed behind a Layer 7 Load Balancer. We will open a web browser and point to the DNS Name (not the IP) of the Application Gateway.</p>
+<p>NOTE: The reason we access the DNS name is because the Application Gateway does not support static ip addresses.</p>
+<ol>
+<li>Navigate to the Application Gateway Resource&rsquo;s public ip, in my case it is <code>tutorialgui-appgw-ip</code></li>
+<li>Make a note of the DNS Name, in my case it is <code>tutorialguiapp.eastus2.cloudapp.azure.com</code></li>
+<li>Open a web browser and paste it in!</li>
+</ol>
+<p><img src="/iis-test.png" alt="http success!" title="http success!"></p>
+<h4 id="verify-access-to-the-sftp">Verify access to the SFTP</h4>
+<p>Recall that our website can be modified with sftp via a Layer 4 Load Balancer.</p>
+<ol>
+<li>Navigate to the Load Balancer Resource&rsquo;s public ip, in my case it is <code>tutorial-lb-public</code></li>
+<li>Make a note of the IP address.</li>
+<li>Use a program such as WinSCP, and enter the details of the IP of the load balancer, and any authentication details.</li>
+<li>Confirmation of connection:</li>
+</ol>
+<p>Using Bash:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-plaintext" data-lang="plaintext">tutor@workstation:~$ ssh tutorialadmin@ip-of-lb
+tutorialadmin@ip-of-lb&#39;s password:
+bvshell:/$ ls
+iisstart.htm  iisstart.png
+bvshell:/$
+</code></pre></div><p>Using WinSCP:</p>
+<p><img src="/sftp-confirmation.png" alt="sftp success!" title="sftp success!"></p>
+<p>-Note:- You may receive a <code>ssh-key</code> warning prompt if you attempt quickly to connect multiple times or for some reason the Load Balancer round-robins you to another VM. This is merely referencing the SSH key of the secondary VM in our availability set and is safe to proceed. Simply add the key to the existing trustedhosts list.</p>
+<p>On Linux: <code>ssh-keyscan -H ip-of-load-balancer &gt;&gt; ~/.ssh/known_hosts</code></p>
+<h4 id="setting-up-shared-storage-azure-files">Setting up Shared Storage (Azure Files)</h4>
+<p>We will use Azure Files for Shared Storage.</p>
+<ol>
+<li>Create a new Storage Account. I&rsquo;ve named mine <code>tutorialwebfiles</code>.</li>
+<li>Navigate to the account and click <code>Files</code>.</li>
+<li>Create a new <code>File Share</code>. I&rsquo;ve named mine <code>webfiles</code>.</li>
+<li>Click the new share, and click the <code>Connect</code> button. This will provide us valuable connection information to be used shortly.</li>
+</ol>
+<h5 id="mapping-the-shared-storage">Mapping the Shared Storage</h5>
+<p>Mapping the storage requires us to map the drive. But we also need to map the drive using IIS later on. So it is crucial we create a local user for this process.</p>
+<ol>
+<li>Run the following PowerShell script in the VM or via the Run Command prompt in the Portal:</li>
+</ol>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-powershell" data-lang="powershell"><span style="color:#75715e"># Username from the Storage Account</span>
+$username = <span style="color:#e6db74">&#34;tutorialwebfiles&#34;</span>
+<span style="color:#75715e"># Storage Account Key used to authenticate</span>
+$password = <span style="color:#e6db74">&#34;storage-account-key-ends-with==&#34;</span>
+
+$securepassword = $password | ConvertTo-SecureString -AsPlainText -Force
+New-LocalUser -Name $username -Password $securepassword -Description <span style="color:#e6db74">&#34;IIS &amp; Azure Files User&#34;</span> -Verbose
+Add-LocalGroupMember -Group <span style="color:#e6db74">&#34;IIS_IUSRS&#34;</span> -Member $username -verbose
+</code></pre></div><p>RDP into the machine and run the following while logged in:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bat" data-lang="bat">cmdkey /add:tutorialwebfiles.file.core.windows.net /user:tutorialwebfiles /pass:storage-account-key-ends-with==
+net use * \\tutorialwebfiles.file.core.windows.net\webfiles
+</code></pre></div><p>This will map the Azure Files drive, and allow the drive to persist after reboots.</p>
+<h4 id="configuring-iis-for-azure-files">Configuring IIS for Azure Files</h4>
+<h5 id="adjusting-the-application-pool">Adjusting the Application Pool</h5>
+<p>We need to adjust the Application Pool Identity to our local user, <code>tutorialwebfiles</code>.
+Run the following PowerShell Script:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-powershell" data-lang="powershell">$UserName = <span style="color:#e6db74">&#34;tutorialwebfiles&#34;</span>
+$Password = <span style="color:#e6db74">&#34;storage-account-key-ends-with==&#34;</span>
+Get-IISAppPool -Name DefaultAppPool
+
+<span style="color:#75715e"># Set the Application Identity</span>
+$appPoolConfigSection = Get-IISConfigSection -SectionPath <span style="color:#e6db74">&#34;system.applicationHost/applicationPools&#34;</span>
+$appPoolDeefaultsElement = Get-IISConfigElement -ConfigElement $appPoolConfigSection -ChildElementName <span style="color:#e6db74">&#34;applicationPoolDefaults&#34;</span>
+$processModelElement     = Get-IISConfigElement -ConfigElement $appPoolDeefaultsElement -ChildElementName <span style="color:#e6db74">&#34;processModel&#34;</span>
+Set-IISConfigAttributeValue -ConfigElement $processModelElement -AttributeName <span style="color:#e6db74">&#34;identityType&#34;</span> -AttributeValue <span style="color:#e6db74">&#34;SpecificUser&#34;</span>
+
+<span style="color:#75715e"># Set password value</span>
+$appPoolConfigSection = Get-IISConfigSection -SectionPath <span style="color:#e6db74">&#34;system.applicationHost/applicationPools&#34;</span>
+$appPoolDeefaultsElement = Get-IISConfigElement -ConfigElement $appPoolConfigSection -ChildElementName <span style="color:#e6db74">&#34;applicationPoolDefaults&#34;</span>
+$processModelElement     = Get-IISConfigElement -ConfigElement $appPoolDeefaultsElement -ChildElementName <span style="color:#e6db74">&#34;processModel&#34;</span>
+Set-IISConfigAttributeValue -ConfigElement $processModelElement -AttributeName <span style="color:#e6db74">&#34;password&#34;</span> -AttributeValue $password
+
+<span style="color:#75715e"># Set user value</span>
+$appPoolConfigSection = Get-IISConfigSection -SectionPath <span style="color:#e6db74">&#34;system.applicationHost/applicationPools&#34;</span>
+$appPoolDeefaultsElement = Get-IISConfigElement -ConfigElement $appPoolConfigSection -ChildElementName <span style="color:#e6db74">&#34;applicationPoolDefaults&#34;</span>
+$processModelElement     = Get-IISConfigElement -ConfigElement $appPoolDeefaultsElement -ChildElementName <span style="color:#e6db74">&#34;processModel&#34;</span>
+Set-IISConfigAttributeValue -ConfigElement $processModelElement -AttributeName <span style="color:#e6db74">&#34;userName&#34;</span> -AttributeValue $userName
+
+Start-Sleep -Seconds 5
+Write-Output <span style="color:#e6db74">&#34;Sleeping 5 seconds to wait for app pool to initialize changes.&#34;</span>
+<span style="color:#75715e"># Start the App Pool</span>
+(Get-IISAppPool -Name DefaultAppPool).start()
+</code></pre></div><p>Now let&rsquo;s configure Shared Configuration:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-powershell" data-lang="powershell">Import-Module IISAdministration
+Import-Module WebAdministration
+<span style="color:#75715e"># Modify your variables</span>
+$AzureFilesPath = <span style="color:#e6db74">&#34;\\tutorialwebfiles.file.core.windows.net\webfiles\sharedconfig&#34;</span>
+$WebRootPath = <span style="color:#e6db74">&#34;\\tutorialwebfiles.file.core.windows.net\webfiles\wwwroot&#34;</span>
+$Username = <span style="color:#e6db74">&#34;tutorialwebfiles&#34;</span>
+$UserPassword = ConvertTo-SecureString <span style="color:#e6db74">&#34;storage-account-key-ends-with==&#34;</span> -AsPlainText -Force
+$PlainPassword = <span style="color:#e6db74">&#34;storage-account-key-ends-with==&#34;</span>
+$KeyEncryptionPassword = ConvertTo-SecureString <span style="color:#e6db74">&#34;shared-config-encrypted-password&#34;</span> -AsPlainText -Force
+
+<span style="color:#66d9ef">if</span> (Test-Path -Path $AzureFilesPath) {
+  Write-Output <span style="color:#e6db74">&#34;$AzureFilesPath already exists&#34;</span>
+} <span style="color:#66d9ef">else</span> {
+  New-Item -ItemType Directory -Path $AzureFilesPath
+}
+
+(Get-IISAppPool -Name DefaultAppPool).stop()
+Start-Sleep -Seconds 5
+Write-Output <span style="color:#e6db74">&#34;DefaultAppPool stopped&#34;</span>
+Set-ItemProperty <span style="color:#e6db74">&#39;IIS:\Sites\Default Web Site\&#39;</span> -Name physicalPath -Value $WebRootPath
+Set-ItemProperty <span style="color:#e6db74">&#39;IIS:\Sites\Default Web Site\&#39;</span> -Name userName -Value $UserName
+Set-ItemProperty <span style="color:#e6db74">&#39;IIS:\Sites\Default Web Site\&#39;</span> -Name password -Value $PlainPassword
+(Get-IISAppPool -Name DefaultAppPool).start()
+Write-Output <span style="color:#e6db74">&#34;DefaultAppPool started&#34;</span>
+
+Export-IISConfiguration -UserName $Username -Password $UserPassword -PhysicalPath $AzureFilesPath -KeyEncryptionPassword $KeyEncryptionPassword -Force
+Enable-IISSharedConfig -UserName $Username -Password $UserPassword -PhysicalPath $AzureFilesPath -DontCopyRemoteKeys -Force
+
+<span style="color:#66d9ef">if</span> ((Get-IISAppPool -Name DefaultAppPool).State <span style="color:#f92672">-eq</span> <span style="color:#e6db74">&#39;Started&#39;</span>) {
+    Write-Output <span style="color:#e6db74">&#34;DefaultAppPool already started&#34;</span>
+} <span style="color:#66d9ef">else</span> {
+    Write-Output <span style="color:#e6db74">&#34;Starting DefaultAppPool&#34;</span>
+    (Get-IISAppPool -Name DefaultAppPool).start()
+}
+</code></pre></div><p>This can also be done using the IIS Manager located under the Server Node, and selecting <code>Shared Configuration</code>. Always remember to export Configurations before modifications.</p>
+<h5 id="troubleshooting-issues-with-iis-shared-configuration">Troubleshooting Issues with IIS Shared Configuration</h5>
+<p>The vast majority of times, IIS will sometimes complain and APP Pools will start, then stop. Or there will be errors such as <code>Unable to decrypt password</code>. These errors are generally because IIS is having issues with the Application Pool Identity.</p>
+<p>Some tricks to resolve this:</p>
+<ul>
+<li>Remove the website, and re-add it.</li>
+<li>Reinitialize the identity using the IIS Manager GUI and re-entering the password.</li>
+<li>Turn off Shared Configuration and turn it back on by re-entering and decrypting the configuration.</li>
+</ul>
+<h4 id="updating-ssh-to-point-to-azure-files">Updating SSH to point to Azure Files</h4>
+<p>Notice we are now pointing to the local user we created previously. Instead of using a virtual account. Be sure to change the drive letter under <code>settings.access.winAccounts.new.session.shares.new.localDrive</code> if your drive letter is different.</p>
+<p>Replace the strings <code>storage-account-key-ends-with==</code> with the one of the Azure Files keys.</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-powershell" data-lang="powershell">$settingsFilePath = <span style="color:#e6db74">&#34;C:\Apps\bitvise-settings&#34;</span>
+$settingsFile = <span style="color:#e6db74">&#39;$cfg = new-object -com &#34;BssCfg815.BssCfg815&#34;
+</span><span style="color:#e6db74">
+</span><span style="color:#e6db74">$cfg.settings.SetDefaults()
+</span><span style="color:#e6db74">$cfg.settings.server.SetDefaults()
+</span><span style="color:#e6db74">$cfg.settings.server.windowsFirewall.SetDefaults()
+</span><span style="color:#e6db74">$cfg.settings.server.windowsFirewall.sshPortsFirewallSetting = 3 # $cfg.enums.WindowsFirewallSetting.globalScope
+</span><span style="color:#e6db74">$cfg.settings.server.windowsFirewall.forwardedPortsFirewallSetting = 3 # $cfg.enums.WindowsFirewallSetting.globalScope
+</span><span style="color:#e6db74">$cfg.settings.server.windowsFirewall.ftpPortsFirewallSetting = 3 # $cfg.enums.WindowsFirewallSetting.globalScope
+</span><span style="color:#e6db74">$cfg.settings.access.SetDefaults()
+</span><span style="color:#e6db74">$cfg.settings.access.virtAccounts.Clear()
+</span><span style="color:#e6db74">$cfg.settings.access.virtAccounts.new.SetDefaults()
+</span><span style="color:#e6db74">$cfg.settings.access.virtAccounts.new.virtAccount = &#34;tutorialwebfiles&#34;
+</span><span style="color:#e6db74">$cfg.settings.access.virtAccounts.new.virtPassword.Set(&#34;storage-account-key-ends-with==&#34;)
+</span><span style="color:#e6db74">$cfg.settings.access.virtAccounts.new.group = &#34;Virtual Users&#34;
+</span><span style="color:#e6db74">$cfg.settings.access.virtAccounts.new.loginAllowed = 1 # $cfg.enums.DefaultYesNo.yes
+</span><span style="color:#e6db74">$cfg.settings.access.virtAccounts.new.session.SetDefaults()
+</span><span style="color:#e6db74">$cfg.settings.access.virtAccounts.new.session.shares.Clear()
+</span><span style="color:#e6db74">$cfg.settings.access.virtAccounts.new.session.shares.new.SetDefaults()
+</span><span style="color:#e6db74">$cfg.settings.access.virtAccounts.new.session.shares.new.remoteDir = &#34;\\tutorialwebfiles.file.core.windows.net\webfiles&#34;
+</span><span style="color:#e6db74">$cfg.settings.access.virtAccounts.new.session.shares.new.specifyCredentials = $true
+</span><span style="color:#e6db74">$cfg.settings.access.virtAccounts.new.session.shares.new.username = &#34;tutorialwebfiles&#34;
+</span><span style="color:#e6db74">$cfg.settings.access.virtAccounts.new.session.shares.new.password.Set(&#34;storage-account-key-ends-with==&#34;)
+</span><span style="color:#e6db74">$cfg.settings.access.virtAccounts.new.session.shares.new.localDrive = &#34;Z:&#34;
+</span><span style="color:#e6db74">$cfg.settings.access.virtAccounts.new.session.shares.NewCommit()
+</span><span style="color:#e6db74">$cfg.settings.access.virtAccounts.new.term.SetDefaults()
+</span><span style="color:#e6db74">$cfg.settings.access.virtAccounts.new.term.shellAccessType = 10 # $cfg.enums.ShellAccessWD.bvshell
+</span><span style="color:#e6db74">$cfg.settings.access.virtAccounts.new.xfer.SetDefaults()
+</span><span style="color:#e6db74">$cfg.settings.access.virtAccounts.new.xfer.permitScp = 1 # $cfg.enums.DefaultYesNo.yes
+</span><span style="color:#e6db74">$cfg.settings.access.virtAccounts.new.xfer.permitSftp = 1 # $cfg.enums.DefaultYesNo.yes
+</span><span style="color:#e6db74">$cfg.settings.access.virtAccounts.new.xfer.permitFtps = 1 # $cfg.enums.DefaultYesNo.yes
+</span><span style="color:#e6db74">$cfg.settings.access.virtAccounts.new.xfer.inheritMountPoints = $false
+</span><span style="color:#e6db74">$cfg.settings.access.virtAccounts.new.xfer.mountPoints.Clear()
+</span><span style="color:#e6db74">$cfg.settings.access.virtAccounts.new.xfer.mountPoints.new.SetDefaults()
+</span><span style="color:#e6db74">$cfg.settings.access.virtAccounts.new.xfer.mountPoints.new.realRootPath = &#34;Z:\wwwroot&#34;
+</span><span style="color:#e6db74">$cfg.settings.access.virtAccounts.new.xfer.mountPoints.NewCommit()
+</span><span style="color:#e6db74">$cfg.settings.access.virtAccounts.new.xfer.useDefaultSfsHomeDir = $false
+</span><span style="color:#e6db74">$cfg.settings.access.virtAccounts.new.fwding.SetDefaults()
+</span><span style="color:#e6db74">$cfg.settings.access.virtAccounts.new.fwding.permitC2S = 2 # $cfg.enums.DefaultYesNo.no
+</span><span style="color:#e6db74">$cfg.settings.access.virtAccounts.new.fwding.permitS2C = 2 # $cfg.enums.DefaultYesNo.no
+</span><span style="color:#e6db74">$cfg.settings.access.virtAccounts.NewCommit()
+</span><span style="color:#e6db74">
+</span><span style="color:#e6db74">$cfg.settings.Save()&#39;</span>
+
+New-Item -ItemType File -Path $settingsFilePath -Verbose -Force
+
+Set-Content -Path $settingsFilePath -Value $settingsFile -Verbose -NoNewline
+
+<span style="color:#75715e"># Apply the settings file configuration</span>
+Write-Output <span style="color:#e6db74">&#34;Applying configuration with BssCfg&#34;</span>
+&amp; <span style="color:#e6db74">&#39;C:\Program Files\Bitvise SSH Server\BssCfg.exe&#39;</span> settings importText $settingsFilePath
+</code></pre></div><h4 id="locking-down-network-traffic">Locking Down Network Traffic</h4>
+<ul>
+<li>Always ensure that critical traffic such as RDP, sftp, etc. is restricted only to networks you will connect from.
+<ul>
+<li>Always ensure that the Firewall inside the Virtual Machine is also locked down.</li>
+</ul>
+</li>
+</ul>
+<h2 id="wrapping-up-gui">Wrapping Up (GUI)</h2>
+<p>We are now finished with the GUI configuration. In the next guide, we&rsquo;ll build these resources using PowerShell!</p>
+<h2 id="warning-this-might-be-out-of-date">Warning, this might be out of date!</h2>
+<p>Originally Posted: February 23, 2019.</p>
+
+    </div>
+    
+      
+        <div class="pagination">
+          <div class="pagination__title">
+            <span class="pagination__title-h">Read other posts</span>
+            <hr />
+          </div>
+          <div class="pagination__buttons">
+            
+              <span class="button previous">
+                <a href="https://deyjcode.github.io/posts/moving-to-hugo/">
+                  <span class="button__icon">←</span>
+                  <span class="button__text">Moving to Hugo</span>
+                </a>
+              </span>
+            
+            
+              <span class="button next">
+                <a href="https://deyjcode.github.io/posts/image-state-undeployable-with-packer-and-azure/">
+                  <span class="button__text">IMAGE_STATE_UNDEPLOYABLE with Packer and Azure</span>
+                  <span class="button__icon">→</span>
+                </a>
+              </span>
+            
+          </div>
+        </div>
+      
+    
+
+
+    
+      
+        
+
+      
+    
+
+    </div>
+
+      </div>
+
+      
+        <footer class="footer">
+  <div class="footer__inner">
+    
+      <a href="/" class="logo" style="text-decoration: none;">
+  
+    <span class="logo__mark"><svg xmlns="http://www.w3.org/2000/svg" class="greater-icon" viewBox="0 0 44 44">
+  <path fill="none" d="M15 8l14.729 14.382L15 35.367"/>
+</svg>
+</span>
+    <span class="logo__text"># automating ops</span>
+    <span class="logo__cursor"></span>
+  
+</a>
+
+      <div class="copyright">
+        <span>© 2020 Powered by <a href="https://gohugo.io" target="_blank" rel="noopener">Hugo</a></span>
+        <span>Theme created by <a href="https://twitter.com/panr" target="_blank" rel="noopener">panr</a></span>
+      </div>
+    
+  </div>
+</footer>
+
+<script src="https://deyjcode.github.io/assets/main.js"></script>
+<script src="https://deyjcode.github.io/assets/prism.js"></script>
+
+
+      
+    </div>
+
+    
+  </body>
+</html>

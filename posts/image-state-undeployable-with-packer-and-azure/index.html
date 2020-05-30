@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    
+      <title>IMAGE_STATE_UNDEPLOYABLE with Packer and Azure :: Automating Ops — Write-Post -Passthru | Publish-Blog</title>
+    
+    <meta http-equiv="content-type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+<meta name="description" content="Ever run into IMAGE_STATE_UNDEPLOYABLE when running Packer against Azure?
+&amp;hellip;And it keeps going and going?
+The issue here is actually with sysprep and not packer. Surprise, surprise. This error occurs because Sysprep fails to actually set the imagestate. And is an issue with the Azure Agent. See this post for information on the Azure Agent.
+So our solution is in the provisioners block and add the following to the provisioners array with the powershell code:"/>
+<meta name="keywords" content=""/>
+<meta name="robots" content="noodp"/>
+<link rel="canonical" href="https://deyjcode.github.io/posts/image-state-undeployable-with-packer-and-azure/" />
+
+
+
+
+
+<link rel="stylesheet" href="https://deyjcode.github.io/assets/style.css">
+
+
+<link rel="stylesheet" href="https://deyjcode.github.io/style.css">
+
+
+<link rel="apple-touch-icon-precomposed" sizes="144x144" href="https://deyjcode.github.io/img/apple-touch-icon-144-precomposed.png">
+<link rel="shortcut icon" href="https://deyjcode.github.io/img/favicon.png">
+
+
+<meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="IMAGE_STATE_UNDEPLOYABLE with Packer and Azure"/>
+<meta name="twitter:description" content="Ever run into IMAGE_STATE_UNDEPLOYABLE when running Packer against Azure?
+&hellip;And it keeps going and going?
+The issue here is actually with sysprep and not packer. Surprise, surprise. This error occurs because Sysprep fails to actually set the imagestate. And is an issue with the Azure Agent. See this post for information on the Azure Agent.
+So our solution is in the provisioners block and add the following to the provisioners array with the powershell code:"/>
+
+
+
+<meta property="og:title" content="IMAGE_STATE_UNDEPLOYABLE with Packer and Azure" />
+<meta property="og:description" content="Ever run into IMAGE_STATE_UNDEPLOYABLE when running Packer against Azure?
+&hellip;And it keeps going and going?
+The issue here is actually with sysprep and not packer. Surprise, surprise. This error occurs because Sysprep fails to actually set the imagestate. And is an issue with the Azure Agent. See this post for information on the Azure Agent.
+So our solution is in the provisioners block and add the following to the provisioners array with the powershell code:" />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://deyjcode.github.io/posts/image-state-undeployable-with-packer-and-azure/" />
+<meta property="article:published_time" content="2018-12-13T13:30:50-05:00" />
+<meta property="article:modified_time" content="2018-12-13T13:30:50-05:00" /><meta property="og:site_name" content="Automating Ops" />
+
+
+
+
+
+
+  </head>
+  <body class="dark-theme">
+    <div class="container">
+      <header class="header">
+  <span class="header__inner">
+    <a href="/" class="logo" style="text-decoration: none;">
+  
+    <span class="logo__mark"><svg xmlns="http://www.w3.org/2000/svg" class="greater-icon" viewBox="0 0 44 44">
+  <path fill="none" d="M15 8l14.729 14.382L15 35.367"/>
+</svg>
+</span>
+    <span class="logo__text"># automating ops</span>
+    <span class="logo__cursor"></span>
+  
+</a>
+
+    <span class="header__right">
+      
+        <nav class="menu">
+  <ul class="menu__inner menu__inner--desktop">
+    
+      
+        
+          <li><a href="/about">About</a></li>
+        
+      
+      
+    
+  </ul>
+
+  <ul class="menu__inner menu__inner--mobile">
+    
+      
+        <li><a href="/about">About</a></li>
+      
+    
+  </ul>
+</nav>
+
+        <span class="menu-trigger">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path d="M0 0h24v24H0z" fill="none"/>
+            <path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/>
+          </svg>
+        </span>
+      
+      <span class="theme-toggle">
+        <svg class="theme-toggler" width="24" height="24" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <path d="M22 41C32.4934 41 41 32.4934 41 22C41 11.5066 32.4934 3 22
+  3C11.5066 3 3 11.5066 3 22C3 32.4934 11.5066 41 22 41ZM7 22C7
+  13.7157 13.7157 7 22 7V37C13.7157 37 7 30.2843 7 22Z"/>
+</svg>
+
+      </span>
+    </span>
+  </span>
+</header>
+
+
+      <div class="content">
+        
+  
+  
+
+  <div class="post">
+    <h1 class="post-title"><a href="https://deyjcode.github.io/posts/image-state-undeployable-with-packer-and-azure/">IMAGE_STATE_UNDEPLOYABLE with Packer and Azure</a></h1>
+    <div class="post-meta">
+      
+        <span class="post-date">
+          2018-12-13
+        </span>
+
+        
+          
+        
+      
+
+      
+      
+        <span class="post-read-time">— 2 min read</span>
+      
+    </div>
+
+    
+
+    
+
+    <div class="post-content">
+      
+      <p>Ever run into IMAGE_STATE_UNDEPLOYABLE when running Packer against Azure?</p>
+<p>&hellip;And it keeps going and going?</p>
+<p>The issue here is actually with <code>sysprep</code> and not <code>packer</code>. Surprise, surprise. This error occurs because Sysprep fails to actually set the <code>imagestate</code>.  And is an issue with the Azure Agent. See <a href="https://blogs.msdn.microsoft.com/mast/2014/02/17/vm-agent-available-for-azure-vms/">this post</a> for information on the Azure Agent.</p>
+<p>So our solution is in the <code>provisioners</code> block and add the following to the <code>provisioners</code> array with the <code>powershell</code> code:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-powershell" data-lang="powershell"><span style="color:#e6db74">&#34;Set-Service RdAgent -StartupType Disabled&#34;</span>, <span style="color:#75715e"># Add this line, disables the VM agent (WaAppAgent)</span>
+<span style="color:#e6db74">&#34;Set-Service WindowsAzureTelemetryService -StartupType Disabled&#34;</span>, <span style="color:#75715e"># Add this line, disables the Windows Azure Agent Telemetry Service</span>
+<span style="color:#e6db74">&#34;Set-Service WindowsAzureGuestAgent -StartupType Disabled&#34;</span>, <span style="color:#75715e"># Add this line, disables the Windows Azure Guest Agent</span>
+<span style="color:#e6db74">&#34;Remove-ItemProperty -Path &#39;HKLM:\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Setup\\SysPrepExternal\\Generalize&#39; -Name &#39;*&#39;&#34;</span> <span style="color:#75715e"># Add this line, clears any Sysprep entries prior to running the actual sysprep command in our inline code</span>
+</code></pre></div><p>Final result sample:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-json" data-lang="json">    <span style="color:#e6db74">&#34;provisioners&#34;</span><span style="color:#960050;background-color:#1e0010">:</span> [
+        {
+        <span style="color:#f92672">&#34;type&#34;</span>: <span style="color:#e6db74">&#34;powershell&#34;</span>,
+        <span style="color:#f92672">&#34;inline&#34;</span>: [
+            <span style="color:#e6db74">&#34;(Invoke-WebRequest -Uri &#39;https://raw.githubusercontent.com/ansible/ansible/devel/examples/scripts/ConfigureRemotingForAnsible.ps1&#39; -UseBasicParsing).content | Out-File $env:temp\\ConfigureRemotingForAnsible.ps1&#34;</span>,
+            <span style="color:#e6db74">&#34;powershell.exe -ExecutionPolicy ByPass -File $env:temp\\ConfigureRemotingForAnsible.ps1 -EnableCredSSP&#34;</span>,
+            <span style="color:#e6db74">&#34;Set-Service RdAgent -StartupType Disabled&#34;</span>,
+            <span style="color:#e6db74">&#34;Set-Service WindowsAzureTelemetryService -StartupType Disabled&#34;</span>,
+            <span style="color:#e6db74">&#34;Set-Service WindowsAzureGuestAgent -StartupType Disabled&#34;</span>,
+            <span style="color:#e6db74">&#34;Remove-ItemProperty -Path &#39;HKLM:\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Setup\\SysPrepExternal\\Generalize&#39; -Name &#39;*&#39;&#34;</span>
+          ]
+      },
+      {
+        <span style="color:#f92672">&#34;type&#34;</span>: <span style="color:#e6db74">&#34;windows-restart&#34;</span>,
+        <span style="color:#f92672">&#34;restart_check_command&#34;</span>: <span style="color:#e6db74">&#34;powershell -command \&#34;&amp; {Write-Output &#39;restarted.&#39;}\&#34;&#34;</span>
+      },
+      {
+        <span style="color:#f92672">&#34;type&#34;</span>: <span style="color:#e6db74">&#34;powershell&#34;</span>,
+        <span style="color:#f92672">&#34;inline&#34;</span>: [
+          <span style="color:#e6db74">&#34;&amp; $env:SystemRoot\\System32\\Sysprep\\Sysprep.exe /oobe /generalize /quiet /quit&#34;</span>,
+          <span style="color:#e6db74">&#34;while($true) { $imageState = Get-ItemProperty HKLM:\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Setup\\State | Select ImageState; if($imageState.ImageState -ne &#39;IMAGE_STATE_GENERALIZE_RESEAL_TO_OOBE&#39;) { Write-Output $imageState.ImageState; Start-Sleep -s 10  } else { break } }&#34;</span>
+        ]
+      }
+    ]
+</code></pre></div><p>This should now fix the issue and allow deployment to continue!</p>
+<h2 id="warning-this-might-be-out-of-date">Warning, this might be out of date!</h2>
+<p>Originally posted: December 13, 2018.</p>
+
+    </div>
+    
+      
+        <div class="pagination">
+          <div class="pagination__title">
+            <span class="pagination__title-h">Read other posts</span>
+            <hr />
+          </div>
+          <div class="pagination__buttons">
+            
+              <span class="button previous">
+                <a href="https://deyjcode.github.io/posts/building-an-azure-webserver-part-1/">
+                  <span class="button__icon">←</span>
+                  <span class="button__text">Building an Azure Webserver: Part 1</span>
+                </a>
+              </span>
+            
+            
+          </div>
+        </div>
+      
+    
+
+
+    
+      
+        
+
+      
+    
+
+    </div>
+
+      </div>
+
+      
+        <footer class="footer">
+  <div class="footer__inner">
+    
+      <a href="/" class="logo" style="text-decoration: none;">
+  
+    <span class="logo__mark"><svg xmlns="http://www.w3.org/2000/svg" class="greater-icon" viewBox="0 0 44 44">
+  <path fill="none" d="M15 8l14.729 14.382L15 35.367"/>
+</svg>
+</span>
+    <span class="logo__text"># automating ops</span>
+    <span class="logo__cursor"></span>
+  
+</a>
+
+      <div class="copyright">
+        <span>© 2020 Powered by <a href="https://gohugo.io" target="_blank" rel="noopener">Hugo</a></span>
+        <span>Theme created by <a href="https://twitter.com/panr" target="_blank" rel="noopener">panr</a></span>
+      </div>
+    
+  </div>
+</footer>
+
+<script src="https://deyjcode.github.io/assets/main.js"></script>
+<script src="https://deyjcode.github.io/assets/prism.js"></script>
+
+
+      
+    </div>
+
+    
+  </body>
+</html>
