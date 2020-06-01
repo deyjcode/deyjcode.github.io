@@ -10,20 +10,20 @@
 Table of Contents  Table of Contents Introduction Designing  Prerequisites  Installing Windows Subsystem for Linux (Windows 10) Installing Ansible (WSL / Ubuntu Distribution) Installing Packer and Terraform   Let&amp;rsquo;s Begin! The Traditional GUI Method  The Azure Portal  Understanding Resources and Resource Groups Application Gateway - HTTP Load Balancer Creating A Network Security Group Our first virtual machine (IIS #1) A taste of automation - deploying the second vm with Azure Resource Manager Templates   Gaining access to our machines  Working with Network Security Groups Creating the Load Balancer Assigning NAT Rules, Health Probes and Connecting via RDP Setting up SFTP   Setting up Our Second Machine Running Commands Through the Portal Testing Load Balancing  Verify access our website (HTTP) Verify access to the SFTP Setting up Shared Storage (Azure Files)  Mapping the Shared Storage   Configuring IIS for Azure Files  Adjusting the Application Pool Troubleshooting Issues with IIS Shared Configuration   Updating SSH to point to Azure Files Locking Down Network Traffic     Wrapping Up (GUI)    Introduction Moving to the &amp;ldquo;Cloud&amp;rdquo; represents quite a few challenges for IT teams that have mostly kept things on-premises."/>
 <meta name="keywords" content=""/>
 <meta name="robots" content="noodp"/>
-<link rel="canonical" href="https://deyjcode.github.io/posts/building-an-azure-webserver-part-1/" />
+<link rel="canonical" href="https://srjennings.github.io/posts/building-an-azure-webserver-part-1/" />
 
 
 
 
 
-<link rel="stylesheet" href="https://deyjcode.github.io/assets/style.css">
+<link rel="stylesheet" href="https://srjennings.github.io/assets/style.css">
 
 
-<link rel="stylesheet" href="https://deyjcode.github.io/style.css">
+<link rel="stylesheet" href="https://srjennings.github.io/style.css">
 
 
-<link rel="apple-touch-icon-precomposed" sizes="144x144" href="https://deyjcode.github.io/img/apple-touch-icon-144-precomposed.png">
-<link rel="shortcut icon" href="https://deyjcode.github.io/img/favicon.png">
+<link rel="apple-touch-icon-precomposed" sizes="144x144" href="https://srjennings.github.io/img/apple-touch-icon-144-precomposed.png">
+<link rel="shortcut icon" href="https://srjennings.github.io/img/favicon.png">
 
 
 <meta name="twitter:card" content="summary"/>
@@ -37,7 +37,7 @@ Table of Contents  Table of Contents Introduction Designing  Prerequisites  Inst
 <meta property="og:description" content="This guide focuses on primarily utilizing the GUI and Portal.
 Table of Contents  Table of Contents Introduction Designing  Prerequisites  Installing Windows Subsystem for Linux (Windows 10) Installing Ansible (WSL / Ubuntu Distribution) Installing Packer and Terraform   Let&rsquo;s Begin! The Traditional GUI Method  The Azure Portal  Understanding Resources and Resource Groups Application Gateway - HTTP Load Balancer Creating A Network Security Group Our first virtual machine (IIS #1) A taste of automation - deploying the second vm with Azure Resource Manager Templates   Gaining access to our machines  Working with Network Security Groups Creating the Load Balancer Assigning NAT Rules, Health Probes and Connecting via RDP Setting up SFTP   Setting up Our Second Machine Running Commands Through the Portal Testing Load Balancing  Verify access our website (HTTP) Verify access to the SFTP Setting up Shared Storage (Azure Files)  Mapping the Shared Storage   Configuring IIS for Azure Files  Adjusting the Application Pool Troubleshooting Issues with IIS Shared Configuration   Updating SSH to point to Azure Files Locking Down Network Traffic     Wrapping Up (GUI)    Introduction Moving to the &ldquo;Cloud&rdquo; represents quite a few challenges for IT teams that have mostly kept things on-premises." />
 <meta property="og:type" content="article" />
-<meta property="og:url" content="https://deyjcode.github.io/posts/building-an-azure-webserver-part-1/" />
+<meta property="og:url" content="https://srjennings.github.io/posts/building-an-azure-webserver-part-1/" />
 <meta property="article:published_time" content="2019-02-23T13:30:50-05:00" />
 <meta property="article:modified_time" content="2019-02-23T13:30:50-05:00" /><meta property="og:site_name" content="Automating Ops" />
 
@@ -111,7 +111,7 @@ Table of Contents  Table of Contents Introduction Designing  Prerequisites  Inst
   
 
   <div class="post">
-    <h1 class="post-title"><a href="https://deyjcode.github.io/posts/building-an-azure-webserver-part-1/">Building an Azure Webserver: Part 1</a></h1>
+    <h1 class="post-title"><a href="https://srjennings.github.io/posts/building-an-azure-webserver-part-1/">Building an Azure Webserver: Part 1</a></h1>
     <div class="post-meta">
       
         <span class="post-date">
@@ -867,7 +867,7 @@ Write-Output <span style="color:#e6db74">&#34;Applying configuration with BssCfg
           <div class="pagination__buttons">
             
               <span class="button previous">
-                <a href="https://deyjcode.github.io/posts/moving-to-hugo/">
+                <a href="https://srjennings.github.io/posts/moving-to-hugo/">
                   <span class="button__icon">←</span>
                   <span class="button__text">Moving to Hugo</span>
                 </a>
@@ -875,7 +875,7 @@ Write-Output <span style="color:#e6db74">&#34;Applying configuration with BssCfg
             
             
               <span class="button next">
-                <a href="https://deyjcode.github.io/posts/image-state-undeployable-with-packer-and-azure/">
+                <a href="https://srjennings.github.io/posts/image-state-undeployable-with-packer-and-azure/">
                   <span class="button__text">IMAGE_STATE_UNDEPLOYABLE with Packer and Azure</span>
                   <span class="button__icon">→</span>
                 </a>
@@ -921,8 +921,8 @@ Write-Output <span style="color:#e6db74">&#34;Applying configuration with BssCfg
   </div>
 </footer>
 
-<script src="https://deyjcode.github.io/assets/main.js"></script>
-<script src="https://deyjcode.github.io/assets/prism.js"></script>
+<script src="https://srjennings.github.io/assets/main.js"></script>
+<script src="https://srjennings.github.io/assets/prism.js"></script>
 
 
       

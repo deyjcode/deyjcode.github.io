@@ -5,21 +5,21 @@
     
     
     
-    <link>https://deyjcode.github.io/</link>
+    <link>https://srjennings.github.io/</link>
     <description>Recent content on Automating Ops</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
     <lastBuildDate>Fri, 29 May 2020 23:53:42 -0400</lastBuildDate>
     
-	<atom:link href="https://deyjcode.github.io/index.xml" rel="self" type="application/rss+xml" />
+	<atom:link href="https://srjennings.github.io/index.xml" rel="self" type="application/rss+xml" />
     
     
     <item>
       <title>Moving to Hugo</title>
-      <link>https://deyjcode.github.io/posts/moving-to-hugo/</link>
+      <link>https://srjennings.github.io/posts/moving-to-hugo/</link>
       <pubDate>Fri, 29 May 2020 23:53:42 -0400</pubDate>
       
-      <guid>https://deyjcode.github.io/posts/moving-to-hugo/</guid>
+      <guid>https://srjennings.github.io/posts/moving-to-hugo/</guid>
       <description>
         
           
@@ -38,10 +38,10 @@ Hopefully this will help me get to writing more often!
     
     <item>
       <title>Building an Azure Webserver: Part 1</title>
-      <link>https://deyjcode.github.io/posts/building-an-azure-webserver-part-1/</link>
+      <link>https://srjennings.github.io/posts/building-an-azure-webserver-part-1/</link>
       <pubDate>Sat, 23 Feb 2019 13:30:50 -0500</pubDate>
       
-      <guid>https://deyjcode.github.io/posts/building-an-azure-webserver-part-1/</guid>
+      <guid>https://srjennings.github.io/posts/building-an-azure-webserver-part-1/</guid>
       <description>
         
           
@@ -59,10 +59,10 @@ Table of Contents  Table of Contents Introduction Designing  Prerequisites  Inst
     
     <item>
       <title>IMAGE_STATE_UNDEPLOYABLE with Packer and Azure</title>
-      <link>https://deyjcode.github.io/posts/image-state-undeployable-with-packer-and-azure/</link>
+      <link>https://srjennings.github.io/posts/image-state-undeployable-with-packer-and-azure/</link>
       <pubDate>Thu, 13 Dec 2018 13:30:50 -0500</pubDate>
       
-      <guid>https://deyjcode.github.io/posts/image-state-undeployable-with-packer-and-azure/</guid>
+      <guid>https://srjennings.github.io/posts/image-state-undeployable-with-packer-and-azure/</guid>
       <description>
         
           
